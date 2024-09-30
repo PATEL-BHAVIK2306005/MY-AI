@@ -1,0 +1,493 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>BAPS AI Expert Assistant</title>
+      <style>
+          body {
+              font-family: 'Roboto', Arial, sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              margin: 0;
+              background-image: url('gc.jpeg');
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              background-attachment: fixed;
+              transition: background-color 0.3s ease, color 0.3s ease;
+          }
+          body.dark-mode {
+              background-color: #1a1a1a;
+              color: #ffffff;
+          }
+          .chat-container {
+              width: 95%;
+              max-width: 800px;
+              background-color: rgba(255, 255, 255, 0.95);
+              border-radius: 20px;
+              box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+              padding: 25px;
+              transition: all 0.4s ease, background-color 0.3s ease;
+          }
+          .dark-mode .chat-container {
+              background-color: rgba(40, 40, 40, 0.95);
+              box-shadow: 0 15px 40px rgba(255,255,255,0.1);
+          }
+          .chat-container:hover {
+              transform: translateY(-8px);
+              box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+          }
+          .chat-header {
+              display: flex;
+              align-items: center;
+              margin-bottom: 20px;
+          }
+          .chat-header svg {
+              width: 50px;
+              height: 50px;
+              margin-right: 15px;
+          }
+          .chat-header h1 {
+              font-size: 24px;
+              color: #222;
+              font-weight: 700;
+              transition: color 0.3s ease;
+          }
+          .dark-mode .chat-header h1 {
+              color: #ffffff;
+          }
+          #chat-output {
+              height: 350px;
+              overflow-y: auto;
+              border: 2px solid #d0d0d0;
+              border-radius: 12px;
+              padding: 15px;
+              margin-bottom: 20px;
+              background-color: rgba(255, 255, 255, 0.9);
+              box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+              transition: background-color 0.3s ease, border-color 0.3s ease;
+          }
+          .dark-mode #chat-output {
+              background-color: rgba(60, 60, 60, 0.9);
+              border-color: #555555;
+              box-shadow: inset 0 2px 5px rgba(255,255,255,0.1);
+          }
+          #user-input {
+              width: 100%;
+              padding: 12px 15px;
+              margin-bottom: 15px;
+              box-sizing: border-box;
+              border: 3px solid #c0c0c0;
+              border-radius: 12px;
+              font-size: 16px;
+              transition: all 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+          }
+          .dark-mode #user-input {
+              background-color: #333333;
+              color: #ffffff;
+              border-color: #555555;
+          }
+          #user-input:focus {
+              outline: none;
+              border-color: #0056b3;
+              box-shadow: 0 0 10px rgba(0,123,255,0.3);
+          }
+          .dark-mode #user-input:focus {
+              border-color: #007bff;
+              box-shadow: 0 0 10px rgba(0,123,255,0.5);
+          }
+          #send-button {
+              width: 100%;
+              padding: 15px;
+              background-color: #0056b3;
+              color: white;
+              border: none;
+              border-radius: 12px;
+              cursor: pointer;
+              font-size: 18px;
+              font-weight: bold;
+              transition: all 0.3s ease;
+              text-transform: uppercase;
+          }
+          #send-button:hover {
+              background-color: #003d82;
+              transform: translateY(-2px);
+              box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+          }
+          .dark-mode #send-button {
+              background-color: #007bff;
+          }
+          .dark-mode #send-button:hover {
+              background-color: #0056b3;
+              box-shadow: 0 5px 15px rgba(255,255,255,0.2);
+          }
+          .message {
+              margin-bottom: 15px;
+              padding: 12px 18px;
+              border-radius: 18px;
+              max-width: 85%;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+              animation: fadeIn 0.5s ease-out;
+              position: relative;
+              transition: background-color 0.3s ease, color 0.3s ease;
+          }
+          .dark-mode .message {
+              box-shadow: 0 2px 5px rgba(255,255,255,0.1);
+          }
+          @keyframes fadeIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+          }
+          .user-message {
+              background-color: #e1f5fe;
+              align-self: flex-end;
+              margin-left: auto;
+              border-bottom-right-radius: 5px;
+              animation: slideInRight 0.5s ease-out;
+          }
+          .dark-mode .user-message {
+              background-color: #1e3a5f;
+              color: #ffffff;
+          }
+          @keyframes slideInRight {
+              from { transform: translateX(20px); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+          }
+          .ai-message {
+              background-color: #f0f4f8;
+              align-self: flex-start;
+              border-bottom-left-radius: 5px;
+              animation: slideInLeft 0.5s ease-out;
+          }
+          .dark-mode .ai-message {
+              background-color: #2a2a2a;
+              color: #ffffff;
+          }
+          @keyframes slideInLeft {
+              from { transform: translateX(-20px); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+          }
+          .message::before {
+              content: '';
+              position: absolute;
+              bottom: -10px;
+              width: 20px;
+              height: 20px;
+              background-color: inherit;
+              clip-path: polygon(0 0, 100% 0, 0 100%);
+          }
+          .user-message::before {
+              right: 10px;
+              transform: rotate(-45deg);
+          }
+          .ai-message::before {
+              left: 10px;
+              transform: rotate(45deg);
+          }
+          .message-header {
+              font-weight: bold;
+              margin-bottom: 5px;
+              font-size: 0.9em;
+              color: #555;
+              transition: color 0.3s ease;
+          }
+          .dark-mode .message-header {
+              color: #bbbbbb;
+          }
+          .user-message .message-header {
+              color: #0056b3;
+          }
+          .dark-mode .user-message .message-header {
+              color: #4d94ff;
+          }
+          .ai-message .message-header {
+              color: #28a745;
+          }
+          .dark-mode .ai-message .message-header {
+              color: #5cb85c;
+          }
+          #clear-button, #print-button {
+              width: 100%;
+              padding: 12px;
+              color: white;
+              border: none;
+              border-radius: 12px;
+              cursor: pointer;
+              font-size: 16px;
+              margin-top: 12px;
+              transition: all 0.3s ease;
+              text-transform: uppercase;
+              font-weight: bold;
+          }
+          #clear-button {
+              background-color: #dc3545;
+          }
+          #clear-button:hover {
+              background-color: #bd2130;
+              transform: translateY(-2px);
+              box-shadow: 0 5px 15px rgba(220,53,69,0.3);
+          }
+          .dark-mode #clear-button {
+              background-color: #dc3545;
+          }
+          .dark-mode #clear-button:hover {
+              background-color: #c82333;
+              box-shadow: 0 5px 15px rgba(220,53,69,0.5);
+          }
+          #print-button {
+              background-color: #28a745;
+          }
+          #print-button:hover {
+              background-color: #218838;
+              transform: translateY(-2px);
+              box-shadow: 0 5px 15px rgba(40,167,69,0.3);
+          }
+          .dark-mode #print-button {
+              background-color: #28a745;
+          }
+          .dark-mode #print-button:hover {
+              background-color: #218838;
+              box-shadow: 0 5px 15px rgba(40,167,69,0.5);
+          }
+          #ai-model-select {
+              width: 100%;
+              padding: 12px 15px;
+              margin-bottom: 15px;
+              box-sizing: border-box;
+              border: 3px solid #c0c0c0;
+              border-radius: 12px;
+              font-size: 16px;
+              transition: all 0.3s ease;
+              appearance: none;
+              background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+              background-repeat: no-repeat;
+              background-position: right 10px center;
+          }
+          .dark-mode #ai-model-select {
+              background-color: #333333;
+              color: #ffffff;
+              border-color: #555555;
+              background-image: url('data:image/svg+xml;utf8,<svg fill="%23ffffff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+          }
+          #ai-model-select:focus {
+              outline: none;
+              border-color: #0056b3;
+              box-shadow: 0 0 10px rgba(0,123,255,0.3);
+          }
+          .dark-mode #ai-model-select:focus {
+              border-color: #007bff;
+              box-shadow: 0 0 10px rgba(0,123,255,0.5);
+          }
+          @media (max-width: 600px) {
+              .chat-container {
+                  width: 100%;
+                  padding: 20px;
+              }
+              .chat-header h1 {
+                  font-size: 20px;
+              }
+              #chat-output {
+                  height: 300px;
+              }
+              #user-input, #send-button, #clear-button, #print-button, #ai-model-select {
+                  font-size: 16px;
+              }
+          }
+          @media (max-width: 400px) {
+              .chat-container {
+                  padding: 15px;
+              }
+              .chat-header h1 {
+                  font-size: 18px;
+              }
+              #chat-output {
+                  height: 250px;
+              }
+              #user-input, #send-button, #clear-button, #print-button, #ai-model-select {
+                  font-size: 14px;
+              }
+          }
+          @media (min-width: 1200px) {
+              .chat-container {
+                  max-width: 1100px;
+              }
+              #chat-output {
+                  height: 450px;
+              }
+          }
+          @media (orientation: landscape) and (max-height: 500px) {
+              .chat-container {
+                  height: 90vh;
+                  display: flex;
+                  flex-direction: column;
+              }
+              #chat-output {
+                  flex-grow: 1;
+              }
+          }
+      </style>
+  </head>
+  <body>
+      <div class="chat-container">
+          <div class="chat-header">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="40">
+                  <circle cx="100" cy="100" r="150" fill="#007bff"/>
+                  <text x="70" y="70" font-family="Arial, sans-serif" font-size="40" fill="white" text-anchor="middle">BAPS AI</text>
+                  <path d="M20,80 Q50,95 80,80" fill="none" stroke="white" stroke-width="3"/>
+              </svg>
+              <h1>BAPS AI Expert Assistant</h1>
+              <button id="dark-mode-toggle">🌓</button>
+          </div>
+          <div id="chat-output" class="chat-messages"></div>
+          <div class="chat-input-container">
+              <input type="text" id="user-input" placeholder="Ask me anything...">
+              <button id="send-button">Send</button>
+          </div>
+          <div class="chat-controls">
+              <button id="clear-button">Clear Chat</button>
+              <button id="print-button">Print Chat</button>
+          </div>
+      </div>
+
+      <script>
+          const chatOutput = document.getElementById('chat-output');
+          const userInput = document.getElementById('user-input');
+          const sendButton = document.getElementById('send-button');
+          const clearButton = document.getElementById('clear-button');
+          const printButton = document.getElementById('print-button');
+          const darkModeToggle = document.getElementById('dark-mode-toggle');
+
+          sendButton.addEventListener('click', sendMessage);
+          userInput.addEventListener('keypress', function(e) {
+              if (e.key === 'Enter') {
+                  sendMessage();
+              }
+          });
+          clearButton.addEventListener('click', clearChat);
+          printButton.addEventListener('click', printChat);
+          darkModeToggle.addEventListener('click', toggleDarkMode);
+
+          function sendMessage() {
+              const message = userInput.value.trim();
+              if (message) {
+                  appendMessage('You', message, 'user-message');
+                  userInput.value = '';
+                  fetchAIResponse(message);
+              }
+          }
+
+          function appendMessage(sender, message, className) {
+              const messageElement = document.createElement('div');
+              messageElement.className = `message ${className}`;
+              messageElement.innerHTML = `
+                  <div class="message-avatar">${sender === 'You' ? '👤' : '🤖'}</div>
+                  <div class="message-content">
+                      <div class="message-sender">${sender}</div>
+                      <div class="message-text">${formatMessage(message)}</div>
+                  </div>
+              `;
+              chatOutput.appendChild(messageElement);
+              chatOutput.scrollTop = chatOutput.scrollHeight;
+          }
+
+          function formatMessage(message) {
+              message = message.replace(/\n/g, '<br>');
+              message = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+              message = message.replace(/\*(.*?)\*/g, '<em>$1</em>');
+              message = message.replace(/^- (.+)$/gm, '<li>$1</li>');
+              message = message.replace(/<li>(.+?)<\/li>/gs, '<ul>$1</ul>');
+              message = message.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+              message = message.replace(/<li>(.+?)<\/li>/gs, '<ol>$1</ol>');
+              message = message.replace(/(\w+)?\n([\s\S]*?)\n/g, function(match, lang, code) {
+                  return `<pre><code class="language-${lang || 'plaintext'}">${escapeHtml(code.trim())}</code></pre>`;
+              });
+              return message;
+          }
+
+          function escapeHtml(unsafe) {
+              return unsafe
+                  .replace(/&/g, "&")
+                  .replace(/</g, "<")
+                  .replace(/>/g, ">")
+                  .replace(/"/g, "")
+                  .replace(/'/g, "'");
+          }
+
+          function clearChat() {
+              chatOutput.innerHTML = '';
+          }
+            function printChat() {
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write('<html><head><title>Expert Chat Transcript</title>');
+                printWindow.document.write('<style>');
+                printWindow.document.write('body { font-family: Arial, sans-serif; background-color: #f0f0f0; color: #333; line-height: 1.6; }');
+                printWindow.document.write('h1 { color: #2c3e50; text-align: center; margin-bottom: 20px; }');
+                printWindow.document.write('.message { margin-bottom: 15px; padding: 10px; border-radius: 5px; }');
+                printWindow.document.write('.user-message { background-color: #e8f4f8; }');
+                printWindow.document.write('.ai-message { background-color: #f0f7ea; }');
+                printWindow.document.write('strong { color: #34495e; }');
+                printWindow.document.write('.chat-container { max-width: 800px; margin: 0 auto; padding: 20px; }');
+                printWindow.document.write('.message strong { display: inline-block; margin-bottom: 5px; }');
+                printWindow.document.write('.user-message strong { color: #3498db; }');
+                printWindow.document.write('.ai-message strong { color: #2ecc71; }');
+                printWindow.document.write('pre { background-color: #f8f8f8; border: 1px solid #ddd; border-radius: 4px; padding: 10px; overflow-x: auto; }');
+                printWindow.document.write('code { font-family: Consolas, Monaco, "Andale Mono", monospace; font-size: 14px; }');
+                printWindow.document.write('ul, ol { margin-left: 20px; padding-left: 20px; }');
+                printWindow.document.write('li { margin-bottom: 5px; }');
+                printWindow.document.write('em { font-style: italic; color: #555; }');
+                printWindow.document.write('@media print {');
+                printWindow.document.write('  body { width: 70%; margin: 0 auto; font-size: 12pt; }');
+                printWindow.document.write('  .chat-container { max-width: 100%; }');
+                printWindow.document.write('  .message { page-break-inside: avoid; }');
+                printWindow.document.write('  h1 { font-size: 18pt; }');
+                printWindow.document.write('  pre, code { font-size: 10pt; white-space: pre-wrap; }');
+                printWindow.document.write('  @page { margin: 2cm; }');
+                printWindow.document.write('}');
+                printWindow.document.write('</style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write('<h1>Expert Chat Transcript</h1>');
+                printWindow.document.write('<div class="chat-container">');
+                printWindow.document.write(chatOutput.innerHTML);
+                printWindow.document.write('</div>');
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.print();
+            }            
+          
+
+          function fetchAIResponse(message) {
+              const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBbdvr16FhlBJKwanIiVTOYjbpVaWeXn2o';
+              const headers = { 'Content-Type': 'application/json' };
+              const data = {
+                  contents: [{
+                      parts: [{
+                          text: message
+                      }]
+                  }]
+              };
+
+              fetch(apiUrl, {
+                  method: 'POST',
+                  headers: headers,
+                  body: JSON.stringify(data)
+              })
+              .then(response => response.json())
+              .then(result => {
+                  const aiResponse = result.candidates[0].content.parts[0].text;
+                  appendMessage('AI', aiResponse, 'ai-message');
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  appendMessage('AI', 'Sorry, there was an error processing your request.', 'ai-message error');
+              });
+          }
+
+          function toggleDarkMode() {
+              document.body.classList.toggle('dark-mode');
+          }
+      </script>
+  </body>
+</html>
